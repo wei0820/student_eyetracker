@@ -5,8 +5,13 @@ import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.core.app.ActivityCompat;
 
 import android.Manifest;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.pm.PackageManager;
+import android.media.AudioManager;
+import android.media.SoundPool;
 import android.os.Bundle;
+import android.util.Log;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -27,6 +32,9 @@ public class MainActivity extends AppCompatActivity {
     CameraSource cameraSource;
     Hourglass hourglass;
     Integer timer = 0;
+    private SoundPool soundPool;
+    private int alertId;
+    boolean isFinish = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -45,6 +53,8 @@ public class MainActivity extends AppCompatActivity {
         timer =  getIntent().getIntExtra("timer",0);
     }
     private void init() {
+        soundPool = new SoundPool(1, AudioManager.STREAM_MUSIC, 5);
+        alertId = soundPool.load(this, R.raw.clock_bell, 1);
         background = findViewById(R.id.background);
         user_message = findViewById(R.id.user_text);
         user_message2 = findViewById(R.id.user_text2);
@@ -66,6 +76,13 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onTimerFinish() {
                 // Timer finished
+                isFinish = true;
+                soundPool.play(alertId, 1.0F, 1.0F, 0, 0, 1.0F);
+                cameraSource.stop();
+                background.setBackgroundColor(getResources().getColor(android.R.color.holo_green_dark));
+                user_message.setText("睜開眼");
+                setAlert();
+
 
 
             }
@@ -162,11 +179,16 @@ public class MainActivity extends AppCompatActivity {
             case USER_EYES_CLOSED:
                 setBackgroundOrange();
                 user_message.setText("閉眼");
-                hourglass.startTimer();
+                if (!isFinish){
+                    hourglass.startTimer();
+
+                }
+
                 if (hourglass.isPaused()){
                     hourglass.resumeTimer();
 
                 }
+
 
 
 
@@ -221,5 +243,17 @@ public class MainActivity extends AppCompatActivity {
                 }
             });
         }
+    }
+    private void setAlert(){
+        new AlertDialog.Builder(this)
+                .setTitle("時間提醒通知")
+                .setMessage("時間提醒通知")
+                .setNegativeButton("我知道了", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        dialogInterface.dismiss();
+                    }
+                }).show();
+
     }
 }
